@@ -46,37 +46,27 @@ device_risk = 1 if device_choice == "New / Unknown device" else 0
 # Analyze Button
 # -----------------------------
 if st.button("Analyze Transaction Risk"):
-
     transaction_frequency = history_size
     spending_spike = amount > (avg_spending * 1.8)
-
     input_data = np.array([[amount, transaction_frequency, location_risk, device_risk]])
     scaled = scaler.transform(input_data)
-
     fraud_prob = fraud_model.predict_proba(scaled)[0][1]
     anomaly_score = anomaly_model.decision_function(scaled)[0]
     behavioral_penalty = 0.15 if spending_spike else 0
-
     final_risk = (fraud_prob * 0.6) + ((1 - anomaly_score) * 0.4) + behavioral_penalty
     final_risk = min(final_risk, 1)
-
     risk_score = round(final_risk * 100, 2)
-
     st.subheader("Risk Analysis Result")
-
     st.write(f"Fraud Probability: {round(fraud_prob * 100, 2)}%")
     st.write(f"Final Risk Score: {risk_score}%")
-
     if spending_spike:
         st.warning("Unusual spending detected compared to past behavior.")
-
     if risk_score > 70:
         st.error("High Risk Transaction — Manual verification recommended.")
     elif risk_score > 40:
         st.warning("Moderate Risk — Additional verification may be required.")
     else:
         st.success("Low Risk — Transaction appears normal.")
-
     # Visualization
     fig, ax = plt.subplots()
     ax.bar(["Fraud Probability", "Final Risk Score"],
